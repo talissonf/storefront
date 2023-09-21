@@ -5,6 +5,7 @@ import {
   i19birthdate,
   i19cardNumber,
   i19confirmPurchase,
+  // i19creditCard,
   i19holderName,
   i19interestFree,
   i19invalidCard,
@@ -49,13 +50,16 @@ export default {
     canSkipHolderInfo: Boolean,
     isCompany: Boolean,
     installmentOptions: Array,
+    gatewayOptions: Array,
     jsClient: Object,
     jsClientLoad: Promise
   },
 
   data () {
     return {
+      canFormatBinInput: false,
       formattedCardBin: '',
+      cardBinSetTimer: null,
       card: {
         bin: '',
         name: '',
@@ -65,8 +69,11 @@ export default {
         doc: '',
         installment: this.installmentOptions ? 1 : 0
       },
+      canFormatExpInput: false,
+      rawCardExp: '',
       isLoadingInstallments: false,
       hasLoadedInstallments: false,
+      loadInstallmentsTimer: null,
       isWaitingCardHash: false,
       installmentList: [],
       alert: {
@@ -118,6 +125,11 @@ export default {
 
     compareName () {
       return this.checkHolder.replace(/(\s.*)/, '')
+    },
+
+    creditCardRegex () {
+      return /cartão de crédito/i
+      // return new RegExp(i18n(i19creditCard), 'i')
     }
   },
 
@@ -155,28 +167,36 @@ export default {
 
     updateInstallmentList () {
       const cardInstallments = this.jsClient.cc_installments
-      if (cardInstallments && cardInstallments.function && this.card.bin.length >= 6) {
-        const installmentList = window[cardInstallments.function]({
-          number: this.card.bin,
-          amount: this.amount.total
-        })
-        if (cardInstallments.is_promise) {
-          this.isLoadingInstallments = true
-          installmentList
-            .then(installmentList => {
-              this.installmentList = installmentList
-              if (installmentList.length) {
-                this.card.installment = 1
-              }
-              this.hasLoadedInstallments = true
-            })
-            .catch(console.error)
-            .finally(() => {
-              this.isLoadingInstallments = false
-            })
-        } else {
-          this.installmentList = installmentList
-        }
+      if (
+        cardInstallments &&
+        cardInstallments.function &&
+        this.card.bin.length >= 6 &&
+        !this.loadInstallmentsTimer
+      ) {
+        this.loadInstallmentsTimer = setTimeout(() => {
+          this.loadInstallmentsTimer = null
+          const installmentList = window[cardInstallments.function]({
+            number: this.card.bin,
+            amount: this.amount.total
+          })
+          if (cardInstallments.is_promise) {
+            this.isLoadingInstallments = true
+            installmentList
+              .then(installmentList => {
+                this.installmentList = installmentList
+                if (installmentList.length) {
+                  this.card.installment = 1
+                }
+                this.hasLoadedInstallments = true
+              })
+              .catch(console.error)
+              .finally(() => {
+                this.isLoadingInstallments = false
+              })
+          } else {
+            this.installmentList = installmentList
+          }
+        }, 200)
       }
     },
 
@@ -288,8 +308,25 @@ export default {
       immediate: true
     },
 
-    formattedCardBin (bin) {
-      this.card.bin = bin.replace(/\D/g, '')
+    formattedCardBin (formattedBin) {
+      if (formattedBin.length === 1) {
+        if (!this.card.bin) {
+          this.canFormatBinInput = true
+          this.$nextTick(() => {
+            const $binInput = this.$refs.binInput.$el
+            $binInput.focus()
+            setTimeout(() => {
+              $binInput.setSelectionRange(1, 1)
+            }, 10)
+          })
+        }
+      }
+      if (!this.cardBinSetTimer && formattedBin.replace(/\D/g, '') !== this.card.bin) {
+        this.cardBinSetTimer = setTimeout(() => {
+          this.cardBinSetTimer = null
+          this.card.bin = this.formattedCardBin.replace(/\D/g, '')
+        }, 200)
+      }
     },
 
     'card.bin' (bin) {
@@ -300,10 +337,10 @@ export default {
           this.activeBrand = numberCheck.card.type
           if (this.activeBrand) {
             this.hasLoadedInstallments = false
-            this.updateInstallmentList()
+            this.$nextTick(this.updateInstallmentList)
           }
         } else if (!this.hasLoadedInstallments && !this.isLoadingInstallments) {
-          this.updateInstallmentList()
+          this.$nextTick(this.updateInstallmentList)
         }
         if (numberCheck.isValid) {
           this.isNumberValidated = this.isNumberPotentiallyValid = true
@@ -313,6 +350,24 @@ export default {
       } else {
         this.activeBrand = ''
       }
+    },
+
+    rawCardExp (dateStr) {
+      if (dateStr.length === 1) {
+        if (!this.card.date) {
+          this.canFormatExpInput = true
+          this.$nextTick(() => {
+            const $expInput = this.$refs.expInput.$el
+            $expInput.focus()
+            setTimeout(() => {
+              $expInput.setSelectionRange(1, 1)
+            }, 10)
+          })
+        }
+      }
+      this.card.date = dateStr.length > 5
+        ? `${dateStr.substr(0, 2)}${dateStr.substr(dateStr.length - 2, 2)}` // mm/YYYY | mmYYYY
+        : dateStr.replace('/', '') // mmyy | mm/yy
     },
 
     alert: {

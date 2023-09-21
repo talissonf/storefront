@@ -7,6 +7,7 @@ import getWidgetUser from '@ecomplus/widget-user/cms.config'
 import getWidgetOffersNotification from '@ecomplus/widget-offers-notification/cms.config'
 import getWidgetAnalytics from '@ecomplus/widget-analytics/cms.config'
 import getWidgetFbPixel from '@ecomplus/widget-fb-pixel/cms.config'
+import getWidgetTiktokPixel from '@ecomplus/widget-tiktok-pixel/cms.config'
 import getWidgetTagManager from '@ecomplus/widget-tag-manager/cms.config'
 import getWidgetGmcRatings from '@ecomplus/widget-gmc-ratings/cms.config'
 import getWidgetTawkto from '@ecomplus/widget-tawkto/cms.config'
@@ -15,6 +16,7 @@ import getWidgetEbit from '@ecomplus/widget-ebit/cms.config'
 import getWidgetCompreConfie from '@ecomplus/widget-compre-confie/cms.config'
 import getWidgetOpinioesVerificadas from '@ecomplus/widget-opinioes-verificadas/cms.config'
 import getWidgetMartan from '@ecomplus/widget-martan/cms.config'
+import getWidgetYourviews from '@ecomplus/widget-yourviews/cms.config'
 
 const fixWidgetConfig = ({ baseDir }, getWidget) => {
   const baseConfig = getWidget()
@@ -38,10 +40,12 @@ export default options => ({
   files: [
     fixWidgetConfig(options, getWidgetAnalytics),
     fixWidgetConfig(options, getWidgetFbPixel),
+    fixWidgetConfig(options, getWidgetTiktokPixel),
     fixWidgetConfig(options, getWidgetTagManager),
     fixWidgetConfig(options, getWidgetGmcRatings),
     fixWidgetConfig(options, getWidgetTawkto),
     fixWidgetConfig(options, getWidgetTrustvox),
+    fixWidgetConfig(options, getWidgetYourviews),
     fixWidgetConfig(options, getWidgetEbit),
     fixWidgetConfig(options, getWidgetCompreConfie),
     fixWidgetConfig(options, getWidgetOpinioesVerificadas),

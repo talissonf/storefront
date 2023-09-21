@@ -29,6 +29,11 @@ export default ({ baseDir, sections }) => ({
                   label: 'Imagem da tabela de medidas',
                   name: 'image',
                   widget: 'image',
+                  media_library: {
+                    config: {
+                      max_file_size: 1000000
+                    }
+                  },
                   required: false
                 },
                 {
@@ -90,6 +95,19 @@ export default ({ baseDir, sections }) => ({
               name: 'title',
               hint: 'Quem comprou este produto, também comprou:',
               widget: 'string'
+            }
+          ]
+        },
+        {
+          label: 'Compre junto',
+          name: 'buy-together',
+          widget: 'object',
+          fields: [
+            {
+              label: 'Exibir spinner de carregamento',
+              name: 'enabled',
+              widget: 'boolean',
+              default: false
             }
           ]
         }
